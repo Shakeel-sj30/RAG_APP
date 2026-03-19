@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 
-from langchain_community.document_loaders import UnstructuredPDFLoader
+from langchain_community.document_loaders import PyPDFLoader  # ✅ CHANGED
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
@@ -18,14 +18,14 @@ working_dir = os.path.dirname(os.path.realpath(__file__))
 # Embedding model
 embeddings = HuggingFaceEmbeddings()
 
-# LLM (Groq)
+# LLM
 llm = ChatGroq(
     model="llama-3.3-70b-versatile",
     temperature=0
 )
 
 def process_document_to_chroma_db(filename):
-    loader = UnstructuredPDFLoader(f"{working_dir}/{filename}")
+    loader = PyPDFLoader(f"{working_dir}/{filename}")  # ✅ FIXED
     documents = loader.load()
 
     text_splitter = RecursiveCharacterTextSplitter(
@@ -35,7 +35,6 @@ def process_document_to_chroma_db(filename):
 
     texts = text_splitter.split_documents(documents)
 
-    # ✅ No persist() needed (auto-save)
     vectordb = Chroma.from_documents(
         documents=texts,
         embedding=embeddings,
