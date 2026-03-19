@@ -1,7 +1,7 @@
 import os
-from dotenv import load_dotenv
+import streamlit as st
 
-from langchain_community.document_loaders import PyPDFLoader  # ✅ CHANGED
+from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
@@ -11,21 +11,24 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
-load_dotenv()
+# ✅ Use cloud-safe temp directory
+working_dir = "/tmp"
 
-working_dir = os.path.dirname(os.path.realpath(__file__))
-
-# Embedding model
-embeddings = HuggingFaceEmbeddings()
-
-# LLM
-llm = ChatGroq(
-    model="llama-3.3-70b-versatile",
-    temperature=0
+# ✅ Stable embedding model (important for cloud)
+embeddings = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
 
+# ✅ FIX: Use Streamlit secrets
+llm = ChatGroq(
+    model="llama-3.3-70b-versatile",
+    temperature=0,
+    groq_api_key=st.secrets["GROQ_API_KEY"]
+)
+
+
 def process_document_to_chroma_db(filename):
-    loader = PyPDFLoader(f"{working_dir}/{filename}")  # ✅ FIXED
+    loader = PyPDFLoader(f"{working_dir}/{filename}")
     documents = loader.load()
 
     text_splitter = RecursiveCharacterTextSplitter(
